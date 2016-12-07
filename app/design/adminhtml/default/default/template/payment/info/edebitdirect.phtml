@@ -1,0 +1,3 @@
+<p><?php echo $this->getMethod()->getTitle() ?></p>
+<p><?php echo Mage::helper('edebitdirect')->__('Routing Number: %s', $this->htmlEscape($this->getInfo()->getRoutingNumber())) ?></p>
+<p><?php echo Mage::helper('edebitdirect')->__('Account Number: %s', $this->htmlEscape($this->getInfo()->getAccountNumber())) ?></p>

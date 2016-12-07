@@ -1,0 +1,6 @@
+"Account Number","Account Number"
+"Account Number: %s","Account Number: %s"
+"Error during process payment: response code: %s %s","Error during process payment: response code: %s %s"
+"Invalid amount for authorization.","Invalid amount for authorization."
+"Routing Number","Routing Number"
+"Routing Number: %s","Routing Number: %s"

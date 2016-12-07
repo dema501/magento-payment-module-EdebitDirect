@@ -1,0 +1,3 @@
+<p><?php echo $this->getMethod()->getTitle() ?></p>
+<p><?php echo Mage::helper('payment')->__('Routing Number: %s', $this->htmlEscape($this->getInfo()->getRoutingNumber())) ?></p>
+<p><?php echo Mage::helper('payment')->__('Account Number: %s', $this->htmlEscape($this->getAccountNumber())) ?></p>

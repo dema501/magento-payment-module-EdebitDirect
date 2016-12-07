@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+/**
+ *
+ * @category   Mage
+ * @package    Liftmode_EdebitDirect
+ * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ */
+-->
+<config>
+    <modules>
+        <Liftmode_EdebitDirect>
+            <version>0.0.12</version>
+        </Liftmode_EdebitDirect>
+    </modules>
+    <global>
+        <models>
+            <edebitdirect>
+                <class>Liftmode_EdebitDirect_Model</class>
+            </edebitdirect>
+        </models>
+        <blocks>
+            <edebitDirect>
+                <class>Liftmode_EdebitDirect_Block</class>
+            </edebitDirect>
+        </blocks>
+        <helpers>
+            <edebitdirect>
+                <class>Liftmode_EdebitDirect_Helper</class>
+            </edebitdirect>
+        </helpers>
+        <resources>
+            <edebitdirect_setup>
+                <setup>
+                    <module>Liftmode_EdebitDirect</module>
+                    <class>Mage_Sales_Model_Resource_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </edebitdirect_setup>
+        </resources>
+    </global>
+    <frontend>
+        <translate>
+            <modules>
+                <Liftmode_EdebitDirect>
+                    <files>
+                        <default>Liftmode_EdebitDirect.csv</default>
+                    </files>
+                </Liftmode_EdebitDirect>
+            </modules>
+        </translate>
+    </frontend>
+    <adminhtml>
+        <translate>
+            <modules>
+                <Liftmode_EdebitDirect>
+                    <files>
+                        <default>Liftmode_EdebitDirect.csv</default>
+                    </files>
+                </Liftmode_EdebitDirect>
+            </modules>
+        </translate>
+    </adminhtml>
+    <default>
+        <payment>
+            <edebitdirect>
+                <active>0</active>
+                <model>edebitdirect/method_EdebitDirect</model>
+                <order_status>pending_payment</order_status>
+                <title>eDebitDirect</title>
+                <allowspecific>1</allowspecific>
+                <payment_action>authorize_capture</payment_action>
+                <specificcountry>US</specificcountry>
+            </edebitdirect>
+         </payment>
+    </default>
+    <crontab>
+        <jobs>
+            <edebitdirect>
+                <schedule>
+                    <cron_expr>*/30 * * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>edebitdirect/async::cron</model>
+                </run>
+            </edebitdirect>
+        </jobs>
+    </crontab>
+</config>

@@ -1,0 +1,4 @@
+<?php echo Mage::helper('edebitdirect')->__('Routing Number: %s', $this->htmlEscape($this->getInfo()->getRoutingNumber())) ?>
+    {{pdf_row_separator}}
+<?php echo Mage::helper('edebitdirect')->__('Account Number: %s', $this->htmlEscape($this->getInfo()->getAccountNumber())) ?>
+    {{pdf_row_separator}}

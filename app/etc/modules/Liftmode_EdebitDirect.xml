@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+/**
+ *
+ * @category   Mage
+ * @package    Liftmode_EdebitDirect
+ * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ */
+-->
+<config>
+    <modules>
+        <Liftmode_EdebitDirect>
+            <active>true</active>
+            <codePool>local</codePool>
+            <depends>
+                <Mage_Payment/>
+                <Mage_Checkout/>
+            </depends>
+        </Liftmode_EdebitDirect>
+    </modules>
+</config>
