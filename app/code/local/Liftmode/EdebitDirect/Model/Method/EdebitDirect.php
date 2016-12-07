@@ -42,16 +42,8 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         $data = $this->_doSale($payment);
 
         $payment->setStatus(self::STATUS_APPROVED)
-            ->setTransactionId($data['TransactionId'])
-            ->setIsTransactionClosed(0);
-
-        // Asynchronous Mode always returns Pending
-        if ($this->getConfigData('async')) {
-            // "Pending Payment" indicates async for internal use
-            $payment->getOrder()->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT)
-                                ->setStatus('pending')
-                                ->save();
-        }
+                ->setTransactionId($data['TransactionId'])
+                ->setIsTransactionClosed(0);
 
         return $this;
     }
@@ -76,20 +68,11 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         $data = $this->_doSale($payment);
 
         $payment->setStatus(self::STATUS_APPROVED)
-            ->setTransactionId($data['TransactionId'])
-            ->setIsTransactionClosed(0);
-
-        // Asynchronous Mode always returns Pending
-        if ($this->getConfigData('async')) {
-            // "Pending Payment" indicates async for internal use
-            $payment->getOrder()->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT)
-                                ->setStatus('pending')
-                                ->save();
-        }
+                ->setTransactionId($data['TransactionId'])
+                ->setIsTransactionClosed(0);
 
         return $this;
     }
-
 
 
     /**
@@ -141,6 +124,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         return $payment->getParentTransactionId() ? $payment->getParentTransactionId() : $payment->getLastTransId();
     }
 
+
     /**
      * Assign data to info model instance
      *
@@ -156,7 +140,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         $info = $this->getInfoInstance();
 
         $info->setRoutingNumber($data->getRoutingNumber())
-            ->setAccountNumber($data->getAccountNumber());
+             ->setAccountNumber($data->getAccountNumber());
 
         return $this;
     }
@@ -177,26 +161,24 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     }
 
 
-
-
     private function _doSale(Varien_Object $payment)
     {
         $order = $payment->getOrder();
         $billing = $order->getBillingAddress();
 
         $data = array(
-            "amount" => (float) $payment->getAmount(), // Yes Decimal Total dollar amount with up to 2 decimal places.
-            "account_number" => $payment->getAccountNumber(), // Yes String Bank account number. This will be validated if the Bank Account Verification feature has been enabled on your account.
-            "routing_number" => $payment->getRoutingNumber(), // Yes String Bank routing number. This will be validated.
-            "check_number" => (int) substr($order->getIncrementId(), -7), // Yes Integer Check number
-            "customer_name" => strval($billing->getFirstname()) . ' ' . strval($billing->getLastname()), // Yes String Account holder's first and last name
+            "amount"          => (float) $payment->getAmount(), // Yes Decimal Total dollar amount with up to 2 decimal places.
+            "account_number"  => strval($payment->getAccountNumber()), // Yes String Bank account number. This will be validated if the Bank Account Verification feature has been enabled on your account.
+            "routing_number"  => strval($payment->getRoutingNumber()), // Yes String Bank routing number. This will be validated.
+            "check_number"    => (int) substr($order->getIncrementId(), -7), // Yes Integer Check number
+            "customer_name"   => strval($billing->getFirstname()) . ' ' . strval($billing->getLastname()), // Yes String Account holder's first and last name
             "customer_street" => substr(strval($billing->getStreet(1)), 0, 50), // Yes String The street portion of the mailing address associated with the customer's checking account. Include any apartment number or mail codes here. Any line breaks will be stripped out.
-            "customer_city" => strval($billing->getCity()), // Yes String The city portion of the mailing address associated with the customer's checking
-            "customer_state" => strval($billing->getRegionCode()),// Yes String The state portion of the mailing address associated with the customer's checking account. It must be a valid US state or territory
-            "customer_zip" => strval($billing->getPostcode()), // Yes String The zip code portion of the mailing address associated with the customer's checking account. Accepted formats: XXXXX,  XXXXX-XXXX
-            "customer_phone" => strval($billing->getTelephone()), // Yes String Customer's phone number
-            "customer_email" => strval($order->getCustomerEmail()), // Yes String Customer's email address. Must be a valid address. Upon processing of the draft an email will be sent to this address.
-            "memo" => 'Order ' . $order->getIncrementId() . ' at ' . Mage::app()->getStore()->getFrontendName() . '. Thank you.', // No String A memo to include on the draft
+            "customer_city"   => strval($billing->getCity()), // Yes String The city portion of the mailing address associated with the customer's checking
+            "customer_state"  => strval($billing->getRegionCode()),// Yes String The state portion of the mailing address associated with the customer's checking account. It must be a valid US state or territory
+            "customer_zip"    => strval($billing->getPostcode()), // Yes String The zip code portion of the mailing address associated with the customer's checking account. Accepted formats: XXXXX,  XXXXX-XXXX
+            "customer_phone"  => strval($billing->getTelephone()), // Yes String Customer's phone number
+            "customer_email"  => strval($order->getCustomerEmail()), // Yes String Customer's email address. Must be a valid address. Upon processing of the draft an email will be sent to this address.
+            "memo"            => 'Order ' . $order->getIncrementId() . ' at ' . Mage::app()->getStore()->getFrontendName() . '. Thank you.', // No String A memo to include on the draft
         );
 
         list ($code, $data) =  $this->_doPost(json_encode($data));
@@ -217,135 +199,88 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
                 }
             }
 
-            Mage::log(array($code, $message), null, 'EdebitDirect.log');
+            Mage::log(array('_doValidate--->', $code, $message), null, 'EdebitDirect.log');
             Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $code, $message));
         }
 
         return $data;
     }
 
-
-    private function _doPost($query)
+    private function _doRequest($url, $extReqHeaders = array(), $extOpts = array())
     {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->getURL());
+        curl_setopt($ch, CURLOPT_URL, $url);
+
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
         curl_setopt($ch, CURLOPT_TIMEOUT, 40);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        $reqHeaders = array(
           'Content-Type: application/json',
-          'Content-Length: ' . strlen($query),
           'Cache-Control: no-cache',
           'Authorization: apikey ' . Mage::helper('core')->decrypt($this->getConfigData('login')) . ':'. Mage::helper('core')->decrypt($this->getConfigData('trans_key'))
-        ));
+        );
 
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($reqHeaders, $extReqHeaders));
+
+        foreach ($extOpts as $key => $value) {
+            curl_setopt($ch, $key, $value);
+        }
 
         $resp = curl_exec($ch);
-        list ($headers, $body) = explode("\r\n\r\n", $resp, 2);
+
+        list ($respHeaders, $body) = explode("\r\n\r\n", $resp, 2);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (!empty($body)) {
             $body = json_decode($body, true);
         }
 
-        foreach (explode("\r\n", $headers) as $hdr) {
+        foreach (explode("\r\n", $respHeaders) as $hdr) {
             if (preg_match("!Location: http.*\/(.*)\/!", $headers, $matches)) {
                 $body['TransactionId'] = $matches[1];
             }
         }
 
         if (curl_errno($ch) || curl_error($ch)) {
+            Mage::log(array($httpCode, $body, $query, curl_error($ch)), null, 'EdebitDirect.log');
             Mage::throwException(curl_error($ch));
         }
 
         curl_close($ch);
-
-        if ((int) substr($httpCode, 0, 1) !== 2) {
-            Mage::log(array($httpCode, $body, $query), null, 'EdebitDirect.log');
-        }
 
         return array($httpCode, $body);
     }
 
+    private function _doPost($query)
+    {
+        return $this->_doRequest($this->getURL(), array(
+            'Content-Length: ' . strlen($query),
+        ), array(
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $query,
+        ));
+    }
 
     private function _doDelete($id)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->getURL($id));
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 40);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-          'Content-Type: application/json',
-          'Cache-Control: no-cache',
-          'Authorization: apikey ' . Mage::helper('core')->decrypt($this->getConfigData('login')) . ':'. Mage::helper('core')->decrypt($this->getConfigData('trans_key'))
+        return $this->_doRequest($this->getURL($id), array(
+        ), array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
         ));
-
-
-        $resp = curl_exec($ch);
-        list ($headers, $body) = explode("\r\n\r\n", $resp, 2);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (!empty($body)) {
-            $body = json_decode($body, true);
-        }
-
-        if (curl_errno($ch) || curl_error($ch)) {
-            Mage::throwException(curl_error($ch));
-        }
-
-        curl_close($ch);
-
-        return array($httpCode, $body);
     }
 
     public function _doGet($id)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->getURL($id));
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 40);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        curl_setopt($ch, CURLOPT_HEADER, true);
-//        curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-          'Content-Type: application/json',
-          'Cache-Control: no-cache',
-          'Authorization: apikey ' . Mage::helper('core')->decrypt($this->getConfigData('login')) . ':'. Mage::helper('core')->decrypt($this->getConfigData('trans_key'))
+        return $this->_doRequest($this->getURL($id), array(
+        ), array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
         ));
-
-
-        $resp = curl_exec($ch);
-        list ($headers, $body) = explode("\r\n\r\n", $resp, 2);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (!empty($body)) {
-            $body = json_decode($body, true);
-        }
-
-        if (curl_errno($ch) || curl_error($ch)) {
-            Mage::throwException(curl_error($ch));
-        }
-
-        curl_close($ch);
-
-        return array($httpCode, $body);
     }
 }
