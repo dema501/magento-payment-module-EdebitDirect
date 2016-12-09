@@ -176,7 +176,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             "customer_city"   => strval($billing->getCity()), // Yes String The city portion of the mailing address associated with the customer's checking
             "customer_state"  => strval($billing->getRegionCode()),// Yes String The state portion of the mailing address associated with the customer's checking account. It must be a valid US state or territory
             "customer_zip"    => strval($billing->getPostcode()), // Yes String The zip code portion of the mailing address associated with the customer's checking account. Accepted formats: XXXXX,  XXXXX-XXXX
-            "customer_phone"  => substr(str_replace(array(' ', '(', ')', '+'), '', strval($billing->getTelephone())), -10), // Yes String Customer's phone number
+            "customer_phone"  => substr(str_replace(array(' ', '(', ')', '+', '-'), '', strval($billing->getTelephone())), -10), // Yes String Customer's phone number
             "customer_email"  => strval($order->getCustomerEmail()), // Yes String Customer's email address. Must be a valid address. Upon processing of the draft an email will be sent to this address.
             "memo"            => 'Order ' . $order->getIncrementId() . ' at ' . Mage::app()->getStore()->getFrontendName() . '. Thank you.', // No String A memo to include on the draft
         );
