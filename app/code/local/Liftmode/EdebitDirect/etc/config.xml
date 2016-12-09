@@ -10,10 +10,29 @@
 <config>
     <modules>
         <Liftmode_EdebitDirect>
-            <version>0.0.12</version>
+            <version>0.0.13</version>
         </Liftmode_EdebitDirect>
     </modules>
     <global>
+        <fieldsets>
+            <sales_convert_quote_payment>
+                <routing_number>
+                    <to_order_payment>*</to_order_payment>
+                </routing_number>
+                <account_number>
+                    <to_order_payment>*</to_order_payment>
+                </account_number>
+            </sales_convert_quote_payment>
+
+            <sales_convert_order_payment>
+                <routing_number>
+                    <to_order_payment>*</to_order_payment>
+                </routing_number>
+                <account_number>
+                    <to_order_payment>*</to_order_payment>
+                </account_number>
+            </sales_convert_order_payment>
+        </fieldsets>
         <models>
             <edebitdirect>
                 <class>Liftmode_EdebitDirect_Model</class>
