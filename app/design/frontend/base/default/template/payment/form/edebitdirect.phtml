@@ -1,12 +1,12 @@
 <ul id="payment_form_<?php echo $this->getMethodCode() ?>" style="display:none">
     <li>
-        <label for="routing_number"><?php echo Mage::helper('core')->quoteEscape($this->__('Routing Number')) ?> <span class="required">*</span></label>
+        <label for="routing_number" class="required"><em>*</em><?php echo Mage::helper('core')->quoteEscape($this->__('Routing Number')) ?></label>
         <div class="input-box">
             <input type="text" id="routing_number" name="payment[routing_number]" title="<?php echo Mage::helper('core')->quoteEscape($this->__("Routing Number")) ?>" class="input-text required-entry validate-length maximum-length-9 minimum-length-9 validate-digits" value=""  maxlength="9" />
         </div>
     </li>
     <li>
-        <label for="account_number"><?php echo Mage::helper('core')->quoteEscape($this->__('Account Number')) ?> <span class="required">*</span></label>
+        <label for="account_number" class="required"><em>*</em><?php echo Mage::helper('core')->quoteEscape($this->__('Account Number')) ?></label>
         <div class="input-box">
             <input type="password" id="account_number" name="payment[account_number]" title="<?php Mage::helper('core')->quoteEscape($this->__("Account Number")) ?>" class="input-text required-entry validate-length maximum-length-17 minimum-length-8 validate-digits" value=""  maxlength="17"/>
         </div>
