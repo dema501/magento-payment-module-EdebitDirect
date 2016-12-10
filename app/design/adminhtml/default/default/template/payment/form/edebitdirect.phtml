@@ -14,7 +14,7 @@
             <input type="text" id="account_number" name="payment[account_number]" title="<?php Mage::helper('core')->quoteEscape($this->__("Account Number")) ?>" class="input-text required-entry validate-length maximum-length-17 minimum-length-8 validate-digits" value="<?php echo $this->escapeHtml($this->getInfoData('account_number')) ?>"  maxlength="17"/>
         </div>
         <div class="helper">
-            <small>Your bank account number is a eight-digit and more code, if you have digits add zeros at begining</small>
+            <small>Your bank account number is a eight-digit and more code, if you have less digits in your account number add zeros at begining</small>
         </div>
     </li>
 </ul>
