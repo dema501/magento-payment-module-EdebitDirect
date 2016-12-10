@@ -41,11 +41,22 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
 
         $data = $this->_doSale($payment);
 
-        $payment->setStatus(self::STATUS_APPROVED)
-                ->setTransactionId($data['TransactionId'])
+        $payment->setTransactionId($data['TransactionId'])
                 ->setIsTransactionClosed(0);
 
         return $this;
+    }
+
+
+    /**
+     * Check void availability
+     *
+     * @param   Varien_Object $invoicePayment
+     * @return  bool
+     */
+    public function canVoid(Varien_Object $payment)
+    {
+        return $this->_canVoid;
     }
 
 
@@ -67,8 +78,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
 
         $data = $this->_doSale($payment);
 
-        $payment->setStatus(self::STATUS_APPROVED)
-                ->setTransactionId($data['TransactionId'])
+        $payment->setTransactionId($data['TransactionId'])
                 ->setIsTransactionClosed(0);
 
         return $this;
@@ -99,15 +109,15 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     {
         $orderTransactionId = $this->_getParentTransactionId($payment);
 
-
-        if ($orderTransactionId) {
-            list ($code, $data) =  $this->_doDelete($orderTransactionId);
-            $data = $this->_doValidate($code, $data);
-
-            $payment->setStatus(self::STATUS_DECLINED)
-                    ->setTransactionId($orderTransactionId)
-                    ->setIsTransactionClosed(1);
+        if (!$orderTransactionId) {
+            Mage::throwException(Mage::helper('paygate')->__('Invalid transaction ID.'));
         }
+
+        list ($code, $data) =  $this->_doDelete($orderTransactionId);
+        $data = $this->_doValidate($code, $data);
+
+        $payment->setTransactionId($orderTransactionId)
+                ->setIsTransactionClosed(1);
 
         return $this;
     }
