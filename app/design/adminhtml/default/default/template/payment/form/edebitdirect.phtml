@@ -4,11 +4,17 @@
         <div class="input-box">
             <input type="text" id="routing_number" name="payment[routing_number]" title="<?php echo Mage::helper('core')->quoteEscape($this->__("Routing Number")) ?>" class="input-text required-entry validate-length maximum-length-9 minimum-length-9 validate-digits" value="<?php echo $this->escapeHtml($this->getInfoData('routing_number')) ?>"  maxlength="9"/>
         </div>
+        <div class="helper">
+            <small>Your bank routing number is a nine-digit code</small>
+        </div>
     </li>
     <li class="form-list">
         <label for="account_number" class="required"><em>*</em><?php echo Mage::helper('core')->quoteEscape($this->__('Account Number')) ?></label>
         <div class="input-box">
             <input type="text" id="account_number" name="payment[account_number]" title="<?php Mage::helper('core')->quoteEscape($this->__("Account Number")) ?>" class="input-text required-entry validate-length maximum-length-17 minimum-length-8 validate-digits" value="<?php echo $this->escapeHtml($this->getInfoData('account_number')) ?>"  maxlength="17"/>
+        </div>
+        <div class="helper">
+            <small>Your bank account number is a eight-digit and more code, if you have digits add zeros at begining</small>
         </div>
     </li>
 </ul>
