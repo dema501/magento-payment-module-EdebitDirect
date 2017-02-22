@@ -191,13 +191,13 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             "memo"            => 'Order ' . $order->getIncrementId() . ' at ' . Mage::app()->getStore()->getFrontendName() . '. Thank you.', // No String A memo to include on the draft
         );
 
-        list ($code, $data) =  $this->_doPost(json_encode($data));
+        list ($resCode, $resData) =  $this->_doPost(json_encode($data));
 
-        return $this->_doValidate($code, $data);
+        return $this->_doValidate($resCode, $resData, json_encode($data));
     }
 
 
-    private function _doValidate($code, $data = [])
+    private function _doValidate($code, $data = [], $postData)
     {
         if ((int) substr($code, 0, 1) !== 2) {
             $message = "";
@@ -209,7 +209,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
                 }
             }
 
-            Mage::log(array('_doValidate--->', $code, $message), null, 'EdebitDirect.log');
+            Mage::log(array('_doValidate--->', $code, $message, $data, $postData), null, 'EdebitDirect.log');
             Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $code, $message));
         }
 
@@ -251,7 +251,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         }
 
         foreach (explode("\r\n", $respHeaders) as $hdr) {
-            if (preg_match("!Location: http.*\/(.*)\/!", $headers, $matches)) {
+            if (preg_match("!Location: http.*\/(.*)\/!", $hdr, $matches)) {
                 $body['TransactionId'] = $matches[1];
             }
         }
