@@ -10,7 +10,7 @@
 <config>
     <modules>
         <Liftmode_EdebitDirect>
-            <version>0.0.17</version>
+            <version>0.0.18</version>
         </Liftmode_EdebitDirect>
     </modules>
     <global>
