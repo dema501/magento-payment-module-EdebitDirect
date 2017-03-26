@@ -182,7 +182,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             "routing_number"  => strval($payment->getRoutingNumber()), // Yes String Bank routing number. This will be validated.
             "check_number"    => (int) substr($order->getIncrementId(), -7), // Yes Integer Check number
             "customer_name"   => strval($billing->getFirstname()) . ' ' . strval($billing->getLastname()), // Yes String Account holder's first and last name
-            "customer_street" => substr(strval($billing->getStreet(1)), 0, 50), // Yes String The street portion of the mailing address associated with the customer's checking account. Include any apartment number or mail codes here. Any line breaks will be stripped out.
+            "customer_street" => substr(strval($billing->getStreet(1)), 0, 49), // Yes String The street portion of the mailing address associated with the customer's checking account. Include any apartment number or mail codes here. Any line breaks will be stripped out.
             "customer_city"   => strval($billing->getCity()), // Yes String The city portion of the mailing address associated with the customer's checking
             "customer_state"  => strval($billing->getRegionCode()),// Yes String The state portion of the mailing address associated with the customer's checking account. It must be a valid US state or territory
             "customer_zip"    => strval($billing->getPostcode()), // Yes String The zip code portion of the mailing address associated with the customer's checking account. Accepted formats: XXXXX,  XXXXX-XXXX
