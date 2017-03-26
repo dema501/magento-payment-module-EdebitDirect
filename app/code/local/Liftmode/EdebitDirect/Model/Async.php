@@ -22,7 +22,7 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
 
                 Mage::log(array('syncOrderStatus------>>>', $order->getIncrementId(), $orderTransactionId, $data), null, 'EdebitDirect.log');
 
-                if (in_array($data['status'], array('Received', 'Processed'))) {
+                if (in_array($data['status'], array('Processed'))) {
                     $this->putOrderOnProcessing($order);
                     Mage::getSingleton('adminhtml/session')->addSuccess('Payment has been sent for orderId: ' . $order->getIncrementId());
                 }
