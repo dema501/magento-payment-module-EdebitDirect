@@ -290,7 +290,6 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         return $this->_doRequest($this->getURL($id), array(
         ), array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => 'DELETE',
         ));
     }
 }
