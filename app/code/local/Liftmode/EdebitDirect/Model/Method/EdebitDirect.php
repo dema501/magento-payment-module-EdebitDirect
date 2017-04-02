@@ -257,7 +257,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         }
 
         if (curl_errno($ch) || curl_error($ch)) {
-            Mage::log(array($httpCode, $body, $query, curl_error($ch)), null, 'EdebitDirect.log');
+            Mage::log(array($httpCode, $body, $query, $extReqHeaders, $extOpts, curl_error($ch)), null, 'EdebitDirect.log');
             Mage::throwException(curl_error($ch));
         }
 
