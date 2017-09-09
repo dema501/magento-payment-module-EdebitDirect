@@ -3,7 +3,7 @@
  *
  * @category   Mage
  * @package    Liftmode_EdebitDirect
- * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ * @copyright  Copyright (c)  Dmitry Bashlov, contributors.
  */
 
 $installer = $this;

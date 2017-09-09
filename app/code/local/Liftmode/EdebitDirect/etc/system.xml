@@ -4,7 +4,7 @@
  *
  * @category   Mage
  * @package    Liftmode_EdebitDirect
- * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ * @copyright  Copyright (c)  Dmitry Bashlov, contributors.
  */
 -->
 <config>
@@ -98,7 +98,7 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </order_status>
-                       <min_order_total translate="label">
+                        <min_order_total translate="label">
                             <label>Minimum Order Total</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>98</sort_order>

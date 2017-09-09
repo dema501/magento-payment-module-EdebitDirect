@@ -3,7 +3,7 @@
  *
  * @category   Mage
  * @package    Liftmode_EdebitDirect
- * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ * @copyright  Copyright (c)  Dmitry Bashlov, contributors.
  */
 
 class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model_Method_Abstract
@@ -113,8 +113,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             Mage::throwException(Mage::helper('paygate')->__('Invalid transaction ID.'));
         }
 
-        list ($code, $data) =  $this->_doDelete($orderTransactionId);
-        $data = $this->_doValidate($code, $data);
+        $data = $this->_doValidate(...$this->_doDelete($orderTransactionId));
 
         $payment->setTransactionId($orderTransactionId)
                 ->setIsTransactionClosed(1);
@@ -171,6 +170,12 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     }
 
 
+    public function log($data)
+    {
+        Mage::log($data, null, 'EdebitDirect.log');
+    }
+
+
     private function _doSale(Varien_Object $payment)
     {
         $order = $payment->getOrder();
@@ -191,9 +196,11 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             "memo"            => 'Order ' . $order->getIncrementId() . ' at ' . Mage::app()->getStore()->getFrontendName() . '. Thank you.', // No String A memo to include on the draft
         );
 
-        list ($resCode, $resData) =  $this->_doPost(json_encode($data));
 
-        return $this->_doValidate($resCode, $resData, json_encode($data));
+        // prepare to request
+        $jsonData = json_encode($data);
+
+        return $this->_doValidate(...$this->_doPost($jsonData), ...[$jsonData]);
     }
 
 
@@ -209,7 +216,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
                 }
             }
 
-            Mage::log(array('_doValidate--->', $code, $message, $data, $postData), null, 'EdebitDirect.log');
+            $this->log(array('try to doValidate', 'httpStatusCode' => $code, 'RespJson' => $data, 'ReqJson' => $postData));
             Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $code, $message));
         }
 
@@ -246,6 +253,11 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
         list ($respHeaders, $body) = explode("\r\n\r\n", $resp, 2);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
+        $errCode = curl_errno($ch);
+        $errMessage = curl_error($ch);
+
+        curl_close($ch);
+
         if (!empty($body)) {
             $body = json_decode($body, true);
         }
@@ -256,12 +268,10 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
             }
         }
 
-        if (curl_errno($ch) || curl_error($ch)) {
-            Mage::log(array($httpCode, $body, $query, $extReqHeaders, $extOpts, curl_error($ch)), null, 'EdebitDirect.log');
-            Mage::throwException(curl_error($ch));
+        if ($errCode || $errMessage) {
+            $this->log(array('doRequest', 'url' => $url, 'httpRespCode' => $httpCode, 'httpRespHeaders' => $respHeaders, 'httpRespBody' => $body, 'httpReqHeaders' => array_merge($reqHeaders, $extReqHeaders), 'httpReqExtraOptions' => $extReqOpts, 'errCode' => $errCode, 'errMessage' => $errMessage));
+            Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $httpCode, $errMessage));
         }
-
-        curl_close($ch);
 
         return array($httpCode, $body);
     }

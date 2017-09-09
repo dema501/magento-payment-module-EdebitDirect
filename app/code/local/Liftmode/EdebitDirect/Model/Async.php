@@ -3,37 +3,46 @@
  *
  * @category   Mage
  * @package    Liftmode_EdebitDirect
- * @copyright  Copyright (c)  LiftMode (Synaptent LLC).
+ * @copyright  Copyright (c)  Dmitry Bashlov, contributors.
  */
 
 class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
 {
+
+    private $_model;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->_model = Mage::getModel('edebitdirect/method_edebitDirect');
+    }
+
     /**
      * Poll Amazon API to receive order status and update Magento order.
      */
     public function syncOrderStatus(Mage_Sales_Model_Order $order, $isManualSync = false)
     {
         try {
-            $edebitDirect = Mage::getModel('edebitdirect/method_edebitDirect');
-
-            $orderTransactionId = $edebitDirect->_getParentTransactionId($order->getPayment());
+            $orderTransactionId = $this->_model->_getParentTransactionId($order->getPayment());
             if ($orderTransactionId) {
-                list ($code, $data) = $edebitDirect->_doGet($orderTransactionId);
+                list ($code, $data) = $this->_model->_doGet($orderTransactionId);
 
-                Mage::log(array('syncOrderStatus------>>>', $order->getIncrementId(), $orderTransactionId, $data), null, 'EdebitDirect.log');
+                $this->_model->log(array('syncOrderStatus------>>>', $order->getIncrementId(), $orderTransactionId, $data));
 
                 if (in_array($data['status'], array('Processed'))) {
                     $this->putOrderOnProcessing($order);
                     Mage::getSingleton('adminhtml/session')->addSuccess('Payment has been sent for orderId: ' . $order->getIncrementId());
                 }
+                elseif (in_array($data['status'], array('Cancelled'))) {
+                    $this->putOrderOnHold($order, 'Payment was Cancelled, you should manually check.');
+                }
             } else {
-                Mage::log(array('syncOrderStatus------>>>No-transaction', $order->getIncrementId()), null, 'EdebitDirect.log');
+                $this->_model->log(array('syncOrderStatus------>>>No-transaction', $order->getIncrementId()));
                 $this->putOrderOnHold($order, 'No transaction found, you should manually make invoice');
             }
         } catch (Exception $e) {
 //            $this->putOrderOnHold($order);
             Mage::logException($e);
-            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
         }
     }
 
@@ -42,7 +51,7 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
      */
     public function cron()
     {
-        if(Mage::getStoreConfig('payment/edebitdirect/async')) {
+        if ($this->_model->getConfigData('active') && $this->_model->getConfigData('async')) {
             $orderCollection = Mage::getModel('sales/order_payment')
                 ->getCollection()
                 ->join(array('order'=>'sales/order'), 'main_table.parent_id=order.entity_id', 'state')
@@ -51,11 +60,12 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
                 ->addFieldToFilter('status', Mage_Index_Model_Process::STATUS_PENDING)
         ;
 
-        //echo $orderCollection->getSelect()->__toString();
+            $this->_model->log(array('run sql------>>>', $orderCollection->getSelect()->__toString()));
+
             foreach ($orderCollection as $orderRow) {
                 $order = Mage::getModel('sales/order')->load($orderRow->getParentId());
 
-                Mage::log(array('found orders------>>>', $order->getIncrementId(), $order->getStatus(), $order->getState()), null, 'EdebitDirect.log');
+                $this->_model->log(array('found order------>>>', 'IncrementId' => $order->getIncrementId(), 'Status' => $order->getStatus(), 'State' => $order->getState()));
 
                 $this->syncOrderStatus($order);
             }
@@ -64,7 +74,7 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
 
     public function putOrderOnProcessing(Mage_Sales_Model_Order $order)
     {
-        Mage::log(array('putOrderOnProcessing------>>>', $order->canShip()), null, 'EdebitDirect.log');
+        $this->_model->log(array('putOrderOnProcessing------>>>', 'IncrementId' => $order->getIncrementId()));
 
         // Change order to "On Process"
         if ($order->canShip()) {
@@ -82,14 +92,14 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
 
                 Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('edebitdirect')->__('We recieved your payment for order id: %s. Order was paid by EdebitDirect', $order->getIncrementId()));
             } catch (Exception $e) {
-                Mage::log(array('putOrderOnProcessing---->>>>', $e->getMessage()), null, 'EdebitDirect.log');
+                $this->_model->log(array('putOrderOnProcessing---->>>>', $e->getMessage()));
             }
         }
     }
 
     public function putOrderOnHold(Mage_Sales_Model_Order $order, $reason)
     {
-        Mage::log(array('putOrderOnHold------>>>', $order->getIncrementId()), null, 'EdebitDirect.log');
+        $this->_model->log(array('putOrderOnHold------>>>', 'IncrementId' => $order->getIncrementId()));
 
         // Change order to "On Hold"
         try {
@@ -97,7 +107,7 @@ class Liftmode_EdebitDirect_Model_Async extends Mage_Core_Model_Abstract
             $order->addStatusToHistory($order->getStatus(), $reason, false);
             $order->save();
         } catch (Exception $e) {
-            Mage::log(array('putOrderOnProcessing---->>>>', $e->getMessage()), null, 'EdebitDirect.log');
+            $this->_model->log(array('putOrderOnHold---->>>>', $e->getMessage()));
         }
     }
 }
