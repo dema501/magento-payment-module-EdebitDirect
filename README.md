@@ -34,5 +34,5 @@ You can create issues or if you have some specific problems for your account you
 
 ## Authors and license
 
-[Dmitry Bashlov]
+[Dmitry Bashlov], contributors
 MIT License, see the included [License.md](License.md) file.
