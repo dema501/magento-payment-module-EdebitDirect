@@ -34,7 +34,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     public function authorize(Varien_Object $payment, $amount)
     {
         if ($amount <= 0) {
-            Mage::throwException(Mage::helper('edebitdirect')->__('Invalid amount for authorization.'));
+            Mage::throwException(Mage::helper($this->_code)->__('Invalid amount for authorization.'));
         }
 
         $payment->setAmount($amount);
@@ -71,7 +71,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     public function capture(Varien_Object $payment, $amount)
     {
         if ($amount <= 0) {
-            Mage::throwException(Mage::helper('edebitdirect')->__('Invalid amount for authorization.'));
+            Mage::throwException(Mage::helper($this->_code)->__('Invalid amount for authorization.'));
         }
 
         $payment->setAmount($amount);
@@ -176,6 +176,32 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     }
 
 
+    private function _sanitizeData($data) {
+        if (is_string($data)) {
+            return preg_replace('/"number":\s*"[^"]*([^"]{4})"/i', '"number":"***$1"', preg_replace('/"ccv":\s*"([^"]*)"/i', '"ccv":"***"', $data));
+        }
+
+        if (is_array($data)) {
+            foreach ($data as $k => $v) {
+                if (is_array($v)) {
+                    return $this->_sanitizeData($v);
+                } else {
+                    if (in_array($k, array('number', 'CardNumber')) {
+                        $data[$k] = "***" . substr($data[$k], -4);
+                    }
+
+                    if (in_array($k, array('cvv', 'CardCVV')) {
+                        $data[$k] = "***";
+                    }
+                }
+            }
+        }
+
+
+        return $data;
+    }
+
+
     private function _doSale(Varien_Object $payment)
     {
         $order = $payment->getOrder();
@@ -204,10 +230,11 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
     }
 
 
-    private function _doValidate($code, $data = [], $postData)
+    private function _doValidate($resCode, $data = [], $postData)
     {
-        if ((int) substr($code, 0, 1) !== 2) {
+        if ((int) substr($resCode, 0, 1) !== 2) {
             $message = "";
+
             foreach ($data['check'] as $field => $errors) {
                 $message .= sprintf("\r\nthe issue is in %s field\r\n", $field);
 
@@ -216,14 +243,22 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
                 }
             }
 
-            $this->log(array('try to doValidate', 'httpStatusCode' => $code, 'RespJson' => $data, 'ReqJson' => $postData));
-            Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $code, $message));
+            $this->log(array('try to doValidate', 'httpStatusCode' => $resCode, 'RespJson' => $data, 'ReqJson' => $postData));
+
+            if (Mage::getStoreConfig('slack/general/enable_notification')) {
+                $notificationModel   = Mage::getSingleton('mhauri_slack/notification');
+                $notificationModel->setMessage(
+                    Mage::helper($this->_code)->__("*EdebitDirect payment failed with data:*\nEdebitDirect response ```%s``````%s```\n\nData sent ```%s```", $resCode, json_encode($data), $this->_sanitizeData($postData))
+                )->send(array('icon_emoji' => ':cop::skin-tone-5:'));
+            }
+
+            Mage::throwException(Mage::helper($this->_code)->__("Error during process payment: response code: %s %s", $resCode, $message));
         }
 
         return $data;
     }
 
-    private function _doRequest($url, $extReqHeaders = array(), $extOpts = array())
+    private function _doRequest($url, $extReqHeaders = array(), $extReqOpts = array())
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -244,7 +279,7 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($reqHeaders, $extReqHeaders));
 
-        foreach ($extOpts as $key => $value) {
+        foreach ($extReqOpts as $key => $value) {
             curl_setopt($ch, $key, $value);
         }
 
@@ -270,7 +305,16 @@ class Liftmode_EdebitDirect_Model_Method_EdebitDirect extends Mage_Payment_Model
 
         if ($errCode || $errMessage) {
             $this->log(array('doRequest', 'url' => $url, 'httpRespCode' => $httpCode, 'httpRespHeaders' => $respHeaders, 'httpRespBody' => $body, 'httpReqHeaders' => array_merge($reqHeaders, $extReqHeaders), 'httpReqExtraOptions' => $extReqOpts, 'errCode' => $errCode, 'errMessage' => $errMessage));
-            Mage::throwException(Mage::helper('edebitdirect')->__("Error during process payment: response code: %s %s", $httpCode, $errMessage));
+
+
+            if (Mage::getStoreConfig('slack/general/enable_notification')) {
+                $notificationModel   = Mage::getSingleton('mhauri_slack/notification');
+                $notificationModel->setMessage(
+                    Mage::helper($this->_code)->__("*EdebitDirect payment failed with data:*\nEdebitDirect response ```%s %s```\n\nData sent ```%s```", $errCode, $errMessage, $this->_sanitizeData(!empty($extReqOpts[CURLOPT_POSTFIELDS]) ? $extReqOpts[CURLOPT_POSTFIELDS] : ''))
+                )->send(array('icon_emoji' => ':cop::skin-tone-5:'));
+            }
+
+            Mage::throwException(Mage::helper($this->_code)->__("Error during process payment: response code: %s %s", $httpCode, $errMessage));
         }
 
         return array($httpCode, $body);

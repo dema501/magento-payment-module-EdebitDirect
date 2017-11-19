@@ -15,6 +15,7 @@
             <depends>
                 <Mage_Payment/>
                 <Mage_Checkout/>
+                <!-- <Liftmode_SimpleFraudProtection /> -->
             </depends>
         </Liftmode_EdebitDirect>
     </modules>
